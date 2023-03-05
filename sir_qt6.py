@@ -1,6 +1,6 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.QtGui import QPainter, QColor, QPen
+from PyQt6.QtWidgets import QApplication, QMainWindow, QDialog, QGridLayout, QLabel, QLineEdit, QPushButton, QSizePolicy, QVBoxLayout
+from PyQt6.QtGui import QPainter, QColor, QBrush
 import numpy as np
 
 class Agent:
@@ -29,12 +29,15 @@ class Agent:
         return dist
    
 class World:
-    def __init__(self, num_agents, width, height, initial_infected, radius):
+    def __init__(self, num_agents, width, height, initial_infected, radius, infection_prop, recover_prop, death_prop):
         self.num_agents = num_agents
         self.width = width
         self.height = height
         self.initial_infected = initial_infected
         self.radius = radius
+        self.infection_prop = infection_prop
+        self.recover_prop = recover_prop
+        self.death_prop = death_prop
        
         self.agents = []
         self.infected = []
@@ -68,20 +71,22 @@ class World:
         new_infected = []
         new_recovered = []
         new_dead = []
+        
+        if len(self.infected) == 0:
+            print("No more infected agents")
         for infected in self.infected:
             neighbors = self.get_neighbors(infected)
-            print(len(neighbors), " neighbors of ", infected, " are ", str(neighbors))
             for neighbor in neighbors:
                 if neighbor.state == 'S':
-                    if np.random.random() < 0.6:
+                    if np.random.random() < self.infection_prop:
                         neighbor.change_state('I')
                         self.susceptible.remove(neighbor)
                         new_infected.append(neighbor)
-            if np.random.random() < 0.9:
+            if np.random.random() < self.recover_prop:
                 infected.change_state('R')
                 self.infected.remove(infected)
                 new_recovered.append(infected)
-            elif np.random.random() < 0.3: # death
+            elif np.random.random() < self.death_prop: # death
                 infected.change_state('D')
                 self.infected.remove(infected)
                 new_dead.append(infected)
@@ -113,17 +118,23 @@ class World:
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-
+        # Create input dialog to collect parameters using QInputDialog class methods (getText, getInt, getDouble, getItem) and store them in variables (e.g. self.num_agents) 
+        # to be used in the simulation (e.g. self.world = World(self.num_agents, self.width, self.height, self.initial_infected, self.radius, self.infection_propability, self.recovery_propability, self.death_propability)) 
+        # and to be displayed in the GUI (e.g. self.num_agents_label.setText(f"Number of agents: {self.num_agents}"))
+     
         self.title = 'Epidemic Simulation'
-        self.width = int(800)
-        self.height = int(800)
+        self.width = 800
+        self.height = 800
         self.num_agents = 500
         self.initial_infected = 150
         self.radius = 15
         self.infection_propability = 0.8
-        self.movement = 5
-        self.world = World(self.num_agents, self.width, self.height, self.initial_infected, self.radius)
-        self.timer = self.startTimer(500)
+        self.recovery_propability = 0.2
+        self.death_propability = 0.8
+        self.movement = 15
+        self.timestep = 500
+        self.world = World(self.num_agents, self.width, self.height, self.initial_infected, self.radius, self.infection_propability, self.recovery_propability, self.death_propability)
+        self.timer = self.startTimer(self.timestep)
 
     def paintEvent(self, event):
         qp = QPainter(self)
@@ -139,11 +150,6 @@ if __name__ == '__main__':
     title = 'Epidemic Simulation'
     width = 800
     height = 800
-    # num_agents = 500
-    # initial_infected = 5
-    # radius = 15
-    # infection_propability = 0.8
-    # movement = 5
 
     app = QApplication(sys.argv)
     window = MainWindow()
