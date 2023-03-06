@@ -25,7 +25,6 @@ class Agent:
         yy = (self.y - other_agent.y) ** 2
         dist = np.sqrt( xx + yy )
         # dist2 = distance.euclidean((self.x, self.y), (other_agent.x, other_agent.y))
-        # print(xx, " x ", yy, " y ", dist, " - ", dist2)
         return dist
    
 class World:
